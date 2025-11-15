@@ -1,7 +1,7 @@
 {
   "name": "Cash Count",
   "short_name": "Cash",
-  "start_url": "/index.html",
+  "start_url": "https://curtdunford.github.io/cash-counter-app/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#317EFB",
