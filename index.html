@@ -1,143 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Cash Count — Mobile</title>
-<meta name="theme-color" content="#317EFB" />
-<link rel="manifest" href="/manifest.json">
+<meta charset="UTF-8">
+<title>Cash Counter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
 <style>
-:root{--bg:#f3f6fb;--card:#fff;--accent:#317efb;--muted:#6b7280}
-html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#0b1220;background:var(--bg)}
-.wrap{max-width:540px;margin:18px auto;padding:12px}
-header{display:flex;align-items:center;gap:12px}
-h1{margin:0;font-size:20px}
-.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(16,24,40,0.06);}
-.row{display:flex;align-items:center;gap:8px;margin:8px 0}
-.denom{width:60px;font-weight:600}
-input[type=number]{width:90px;padding:8px;border-radius:8px;border:1px solid #e6e9ef;font-size:16px}
-.calc{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
-.big{font-size:20px;font-weight:700}
-footer{margin-top:12px;display:flex;gap:8px}
-button{background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
-.muted{color:var(--muted);font-size:13px}
-label{font-size:14px;color:#111827}
-.small{font-size:13px;color:#374151}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.secondary{background:#e6eefb;color:var(--accent);padding:8px 10px;border-radius:8px}
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  max-width: 400px;
+  margin: auto;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+.row input {
+  width: 60px;
+  padding: 5px;
+  font-size: 16px;
+}
+h2 { margin-top: 25px; }
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 18px;
+}
+.totalBox {
+  font-size: 22px;
+  margin-top: 12px;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-<div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:12px">
-<svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="#317EFB"/><path d="M7 12h10M7 8h6M7 16h10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<div>
-<h1>Cash Count</h1>
-<div class="muted">Quick till count — saves locally and works offline</div>
-</div>
-</div>
-</header>
 
-<main style="margin-top:12px">
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-<label for="date">Date</label>
-<input id="date" type="date">
-</div>
+<h2>Cash Count</h2>
 
-<div id="denoms"></div>
+<label>Date:
+<input type="date" id="date">
+</label>
 
-<div class="card" style="margin-top:10px;">
-<div class="calc"><div class="small">Total:</div><div id="total" class="big">$0.00</div></div>
-<div class="calc"><div class="small">Minus Float ($300.00):</div><div id="minus" class="big">$0.00</div></div>
-<div class="calc"><div class="small">Final Total:</div><div id="final" class="big">$0.00</div></div>
+<div id="container"></div>
 
-<div class="controls">
+<div class="totalBox">Total: <span id="total">$0.00</span></div>
+<div class="totalBox">Final (minus $300 float): <span id="final">$0.00</span></div>
+
 <button id="save">Save</button>
-<button id="export" class="secondary">Export CSV</button>
-<button id="clear" class="secondary">Clear</button>
-</div>
-<div style="margin-top:8px" class="muted">Saved to device storage (local). Tap & hold the URL → Add to Home screen to install.</div>
-</div>
-</div>
-</main>
-</div>
+<button id="clear">Clear</button>
+<button id="export">Export CSV</button>
 
 <script>
-// denominations and values
-const denoms = [100,50,20,10,5,2,1,0.25,0.10,0.05];
-const container = document.getElementById('denoms');
-function money(n){return '$' + n.toFixed(2)}
+const DENOMS = [
+  100, 50, 20, 10, 5, 2, 1,
+  0.25, 0.10, 0.05
+];
 
-denoms.forEach(v=>{
-const row = document.createElement('div'); row.className='row';
-const lbl = document.createElement('div'); lbl.className='denom'; lbl.textContent = '$' + (v>=1?v: v.toFixed(2));
-const input = document.createElement('input'); input.type='number'; input.min='0'; input.step='1'; input.value='0'; input.dataset.value = v;
-input.addEventListener('input', calc);
-row.appendChild(lbl);
-row.appendChild(input);
-const equals = document.createElement('div'); equals.style.marginLeft='8px'; equals.className='small'; equals.textContent = '=';
-const amt = document.createElement('div'); amt.style.marginLeft='8px'; amt.style.minWidth='80px'; amt.className='small'; amt.textContent = money(0);
-row.appendChild(equals);
-row.appendChild(amt);
-container.appendChild(row);
+const container = document.getElementById('container');
+
+DENOMS.forEach(value => {
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  row.innerHTML = `
+    <span>$${value.toFixed(2)}</span>
+    <span>x</span>
+    <input type="number" min="0" value="0">
+    <span>=</span>
+    <span class="lineTotal">$0.00</span>
+  `;
+
+  container.appendChild(row);
 });
 
-function calc(){
-const rows = container.querySelectorAll('.row');
-let total=0;
-rows.forEach(r=>{
-const input = r.querySelector('input');
-const v = parseFloat(input.dataset.value);
-const q = Number(input.value) || 0;
-const line = q * v;
-r.querySelector('.small:last-child').textContent = money(line);
-total += line;
-});
-document.getElementById('total').textContent = money(total);
-const minus = total - 300;
-document.getElementById('minus').textContent = money(minus);
-document.getElementById('final').textContent = money(minus);
+// calculation function
+function calc() {
+  let total = 0;
+  const rows = container.querySelectorAll('.row');
+
+  rows.forEach((row, i) => {
+    const qty = parseFloat(row.querySelector("input").value) || 0;
+    const denom = DENOMS[i];
+    const line = qty * denom;
+    row.querySelector(".lineTotal").textContent = `$${line.toFixed(2)}`;
+    total += line;
+  });
+
+  document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+  document.getElementById('final').textContent = `$${(total - 300).toFixed(2)}`;
 }
 
-// load/save
-const KEY = 'cashcount_v1';
-function save(){
-const data = {date:document.getElementById('date').value,items:[],total:document.getElementById('total').textContent};
-const rows = container.querySelectorAll('.row');
-rows.forEach(r=>{
-const input = r.querySelector('input');
-data.items.push({value:input.dataset.value,q:Number(input.value)||0});
-});
-const all = JSON.parse(localStorage.getItem(KEY)||'[]');
-all.push({t:new Date().toISOString(),data});
-localStorage.setItem(KEY,JSON.stringify(all));
-alert('Saved locally');
+container.addEventListener("input", calc);
+
+// local storage
+const KEY = "cashcount";
+
+function save() {
+  const rows = container.querySelectorAll(".row");
+  const items = [];
+
+  rows.forEach((r, i) => {
+    items.push({
+      denom: DENOMS[i],
+      qty: r.querySelector("input").value
+    });
+  });
+
+  const record = {
+    date: document.getElementById("date").value,
+    items: items,
+    total: document.getElementById("total").textContent,
+    final: document.getElementById("final").textContent
+  };
+
+  const all = JSON.parse(localStorage.getItem(KEY) || "[]");
+  all.push(record);
+  localStorage.setItem(KEY, JSON.stringify(all));
+
+  alert("Saved!");
 }
 
-function clearAll(){
-if(!confirm('Clear all fields?')) return;
-container.querySelectorAll('input').forEach(i=>i.value=0);
-document.getElementById('date').value='';
-calc();
+function clearAll() {
+  document.getElementById("date").value = "";
+  const rows = container.querySelectorAll(".row");
+  rows.forEach(r => r.querySelector("input").value = 0);
+  calc();
 }
 
-function exportCSV(){
-const rows = container.querySelectorAll('.row');
-let csv = 'Denomination,Quantity,Line Total\n';
-rows.forEach(r=>{
-const label = r.querySelector('.denom').textContent;
-const q = r.querySelector('input').value||0;
-const line = r.querySelector('.small:last-child').textContent.replace('$','');
-csv += `${label},${q},${line}\n`;
-});
-csv += `Total, ,${document.getElementById('total').textContent.replace('$','')}\n`;
-csv += `Final, ,${document.getElementById('final').textContent.replace('$','')}\n`;
-const blob = new Blob([csv],{type:'text/csv'});
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a'); a.href=url; a.download='cashcount.csv'; document.body.appendChild(a); a.click(); a.remove();
+// CSV export
+function exportCSV() {
+  let csv = "Denomination,Quantity,Line Total\n";
+
+  const rows = container.querySelectorAll(".row");
+  rows.forEach((row, i) => {
+    const qty = row.querySelector("input").value;
+    const denom = DENOMS[i];
+    const line = parseFloat(qty || 0) * denom;
+    csv += `${denom},${qty},${line.toFixed(2)}\n`;
+  });
+
+  csv += `Total,,${document.getElementById('total').textContent.replace('$','')}\n`;
+  csv += `Final,,${document.getElementById('final').textContent.replace('$','')}\n`;
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "cashcount.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
-document.getElementById('save').addEventListener('click', save);
-document.getElementById('clear').addEventListener
+document.getElementById("save").addEventListener("click", save);
+document.getElementById("clear").addEventListener("click", clearAll);
+document.getElementById("export").addEventListener("click", exportCSV);
+
+// load last save
+(function () {
+  const all = JSON.parse(localStorage.getItem(KEY) || "[]");
+  if (!all.length) return;
+
+  const last = all[all.length - 1];
+
+  document.getElementById("date").value = last.date || "";
+
+  const rows = container.querySelectorAll(".row");
+  rows.forEach((r, i) => {
+    r.querySelector("input").value = last.items[i].qty;
+  });
+
+  calc();
+})();
+
+// service worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
