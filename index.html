@@ -82,7 +82,7 @@ function calc() {
   const rows = container.querySelectorAll('.row');
 
   rows.forEach((row, i) => {
-    const qty = parseFloat(row.querySelector("input").value) || 0;
+    const qty = parseFloat(row.querySelector("input").value) || undefined;
     const denom = DENOMS[i];
     const line = qty * denom;
     row.querySelector(".lineTotal").textContent = `$${line.toFixed(2)}`;
